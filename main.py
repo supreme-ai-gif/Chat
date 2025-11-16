@@ -53,7 +53,7 @@ async def chat_endpoint(user_id: str = Form(...), message: str = Form(...)):
 
     try:
         response = openai.chat.completions.create(
-            model="gpt-4",
+            model=""gpt-3.5-turbo"",
             messages=[
                 {"role": "system", "content": "You are a helpful AI assistant."},
                 {"role": "user", "content": conversation}
