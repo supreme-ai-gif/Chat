@@ -1,62 +1,62 @@
-# server.py
+# main.py
+import os
 from fastapi import FastAPI, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
-
-app = FastAPI(title="Test AI Server")
+import openai
 
 # -----------------------------
-# Enable CORS for all origins
+# OpenAI API Key
 # -----------------------------
+openai.api_key = os.getenv("OPENAI_API_KEY")  # Make sure to set this in Render
+
+# -----------------------------
+# FastAPI Setup
+# -----------------------------
+app = FastAPI(title="Simple GPT Chat Server")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow all origins
+    allow_origins=["*"],  # Allow all origins for testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # -----------------------------
-# Simple in-memory memory
-# -----------------------------
-CHAT_MEMORY = {}
-
-def store_memory(user_id: str, message: str):
-    if user_id not in CHAT_MEMORY:
-        CHAT_MEMORY[user_id] = []
-    CHAT_MEMORY[user_id].append(message)
-
-def get_memory(user_id: str):
-    return CHAT_MEMORY.get(user_id, [])
-
-# -----------------------------
-# Chat logic
-# -----------------------------
-def process_chat(user_id: str, message: str):
-    # Store user message
-    store_memory(user_id, f"User: {message}")
-
-    # For testing, just echo the message with AI prefix
-    ai_reply = f"AI: Echoing '{message}' for {user_id}"
-
-    # Store AI reply
-    store_memory(user_id, ai_reply)
-    return ai_reply
-
-# -----------------------------
-# Chat endpoint
+# Chat Endpoint
 # -----------------------------
 @app.post("/chat")
 async def chat_endpoint(user_id: str = Form(...), message: str = Form(...)):
-    reply = process_chat(user_id, message)
-    return JSONResponse(content={"reply": reply})
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a helpful AI assistant."},
+                {"role": "user", "content": message}
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
+        ai_reply = response.choices[0].message['content'].strip()
+        return JSONResponse({"reply": ai_reply})
+    except Exception as e:
+        return JSONResponse({"reply": f"Error: {str(e)}"})
 
 # -----------------------------
-# Run server
+# Basic Homepage
+# -----------------------------
+@app.get("/")
+async def index():
+    return {
+        "message": "GPT chat server running",
+        "endpoints": ["/chat"]
+    }
+
+# -----------------------------
+# Run Server
 # -----------------------------
 if __name__ == "__main__":
-    import uvicorn
-    import os
     port = int(os.getenv("PORT", 10000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
