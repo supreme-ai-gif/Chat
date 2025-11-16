@@ -1,4 +1,5 @@
-fastapi
-uvicorn
-python-multipart
-openai
+
+fastapi==0.111.0
+uvicorn==0.23.2
+twilio==8.15.0
+openrouter-python==0.2.2
