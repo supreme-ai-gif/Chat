@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Genesis AI Chat</title>
+    <style>
+        body { font-family: Arial; background: #111; color: #fff; }
+        #chat { width: 90%; height: 400px; overflow-y: scroll; margin: 20px auto; padding: 10px; background: #222; border-radius: 10px; }
+        #inputBox { width: 90%; margin: 0 auto; display: flex; }
+        #message { flex: 1; padding: 10px; border-radius: 5px; border: none; }
+        button { padding: 10px 20px; border: none; background: #0f62fe; color: white; border-radius: 5px; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+<h2 style="text-align:center;">Genesis AI Chat Demo</h2>
+
+<div id="chat"></div>
+
+<div id="inputBox">
+    <input id="message" type="text" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+const API_URL = "https://genetic-ai.onrender.com/chat";
+const API_KEY = "22573b6f-6a01-4b0a-a2ef-bf990bc5a49a";  // <-- PUT YOUR DEV KEY
+const USER_ID = "test_user_1";
+
+function addMessage(sender, text) {
+    const chat = document.getElementById("chat");
+    chat.innerHTML += `<p><b>${sender}:</b> ${text}</p>`;
+    chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendMessage() {
+    const msg = document.getElementById("message").value;
+    if (!msg.trim()) return;
+
+    addMessage("You", msg);
+    document.getElementById("message").value = "";
+
+    const formData = new FormData();
+    formData.append("user_id", USER_ID);
+    formData.append("message", msg);
+    formData.append("api_key", API_KEY);
+
+    try {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.reply) {
+            addMessage("AI", data.reply);
+        } else {
+            addMessage("AI", "Error: No reply received");
+        }
+
+    } catch (error) {
+        addMessage("AI", "Network error: " + error);
+    }
+}
+</script>
+
+</body>
+</html>
